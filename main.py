@@ -6,11 +6,28 @@ import time
 os.makedirs("data/awake", exist_ok=True)
 os.makedirs("data/drowsy", exist_ok=True)
 
+# Đếm số ảnh hiện có để nối đuôi
+def get_last_index(class_name):
+    files = os.listdir(f"data/{class_name}")
+    if not files:
+        return 0
+    indices = []
+    for f in files:
+        try:
+            idx = int(f.split("_")[-1].split(".")[0])
+            indices.append(idx)
+        except:
+            pass
+    return max(indices) + 1 if indices else 0
+
 cap = cv2.VideoCapture(0)
 
-current_class = "awake"  # Class hiện tại đang thu thập
-count = {"awake": 0, "drowsy": 0}
-capture_interval = 0.2   # Chụp mỗi 0.2 giây
+current_class = "awake"
+count = {
+    "awake": get_last_index("awake"),
+    "drowsy": get_last_index("drowsy")
+}
+capture_interval = 0.2
 last_capture = time.time()
 
 print("=== THU THẬP DỮ LIỆU ===")
@@ -19,6 +36,8 @@ print("[D] = Chụp class DROWSY (ngủ gật)")
 print("[SPACE] = Bắt đầu/Dừng tự động chụp")
 print("[Q] = Thoát")
 print(f"\nClass hiện tại: {current_class.upper()}")
+print(f"Awake hiện có: {count['awake']} ảnh")
+print(f"Drowsy hiện có: {count['drowsy']} ảnh")
 
 auto_capture = False
 
@@ -27,18 +46,15 @@ while True:
     if not ret:
         break
 
-    # Resize và convert sang grayscale
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     resized = cv2.resize(gray, (227, 227))
 
-    # Tự động chụp theo interval
     if auto_capture and (time.time() - last_capture) >= capture_interval:
         filename = f"data/{current_class}/{current_class}_{count[current_class]:04d}.jpg"
         cv2.imwrite(filename, resized)
         count[current_class] += 1
         last_capture = time.time()
 
-    # Hiển thị thông tin lên màn hình
     display = cv2.cvtColor(resized, cv2.COLOR_GRAY2BGR)
     color = (0, 255, 0) if current_class == "awake" else (0, 0, 255)
     status = "AUTO" if auto_capture else "MANUAL"
@@ -56,10 +72,10 @@ while True:
 
     if key == ord('a'):
         current_class = "awake"
-        print(f"Chuyển sang: AWAKE")
+        print(f"Chuyển sang: AWAKE (đang có {count['awake']} ảnh)")
     elif key == ord('d'):
         current_class = "drowsy"
-        print(f"Chuyển sang: DROWSY")
+        print(f"Chuyển sang: DROWSY (đang có {count['drowsy']} ảnh)")
     elif key == ord(' '):
         auto_capture = not auto_capture
         print(f"Auto capture: {'BẬT' if auto_capture else 'TẮT'}")
