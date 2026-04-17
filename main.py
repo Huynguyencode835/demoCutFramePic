@@ -5,7 +5,7 @@ import time
 # Tạo thư mục lưu ảnh
 os.makedirs("data/awake", exist_ok=True)
 os.makedirs("data/drowsy", exist_ok=True)
-
+os.makedirs("data/yawn", exist_ok=True)
 # Đếm số ảnh hiện có để nối đuôi
 def get_last_index(class_name):
     files = os.listdir(f"data/{class_name}")
@@ -20,12 +20,13 @@ def get_last_index(class_name):
             pass
     return max(indices) + 1 if indices else 0
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 current_class = "awake"
 count = {
     "awake": get_last_index("awake"),
-    "drowsy": get_last_index("drowsy")
+    "drowsy": get_last_index("drowsy"),
+    "yawn": get_last_index("yawn")
 }
 capture_interval = 0.2
 last_capture = time.time()
@@ -33,11 +34,15 @@ last_capture = time.time()
 print("=== THU THẬP DỮ LIỆU ===")
 print("[A] = Chụp class AWAKE (tỉnh táo)")
 print("[D] = Chụp class DROWSY (ngủ gật)")
+print("[Y] = Chụp class YAWN (ngủ gật)")
 print("[SPACE] = Bắt đầu/Dừng tự động chụp")
 print("[Q] = Thoát")
 print(f"\nClass hiện tại: {current_class.upper()}")
 print(f"Awake hiện có: {count['awake']} ảnh")
 print(f"Drowsy hiện có: {count['drowsy']} ảnh")
+print(f"Yawn hiện có: {count['yawn']} ảnh")
+
+
 
 auto_capture = False
 
@@ -50,7 +55,7 @@ while True:
     resized = cv2.resize(gray, (227, 227))
 
     if auto_capture and (time.time() - last_capture) >= capture_interval:
-        filename = f"data/{current_class}/{current_class}_{count[current_class]:04d}.jpg"
+        filename = f"data/{current_class}/Huy_{current_class}_{count[current_class]:04d}.jpg"
         cv2.imwrite(filename, resized)
         count[current_class] += 1
         last_capture = time.time()
@@ -61,7 +66,7 @@ while True:
 
     cv2.putText(display, f"Class: {current_class.upper()}", (10, 25),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
-    cv2.putText(display, f"Awake: {count['awake']}  Drowsy: {count['drowsy']}", (10, 55),
+    cv2.putText(display, f"Awake: {count['awake']}  Drowsy: {count['drowsy']} Yawn: {count['yawn']}", (10, 55),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
     cv2.putText(display, f"Mode: {status}", (10, 85),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 1)
@@ -76,6 +81,9 @@ while True:
     elif key == ord('d'):
         current_class = "drowsy"
         print(f"Chuyển sang: DROWSY (đang có {count['drowsy']} ảnh)")
+    elif key == ord('y'):
+        current_class = "yawn"
+        print(f"Chuyển sang: YAWN (đang có {count['yawn']} ảnh)")
     elif key == ord(' '):
         auto_capture = not auto_capture
         print(f"Auto capture: {'BẬT' if auto_capture else 'TẮT'}")
@@ -88,3 +96,4 @@ cv2.destroyAllWindows()
 print(f"\n=== KẾT QUÁ ===")
 print(f"Awake:  {count['awake']} ảnh")
 print(f"Drowsy: {count['drowsy']} ảnh")
+print(f"Yawn:   {count['yawn']} ảnh")
